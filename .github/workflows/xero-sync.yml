@@ -1,0 +1,51 @@
+name: Sync savings from Xero
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes (GitHub may run it a little late)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xero-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull balance from Xero
+        env:
+          XERO_CLIENT_ID: ${{ secrets.XERO_CLIENT_ID }}
+          XERO_CLIENT_SECRET: ${{ secrets.XERO_CLIENT_SECRET }}
+          XERO_ACCOUNT_NAME: ${{ vars.XERO_ACCOUNT_NAME }}
+          XERO_ACCOUNT_ID: ${{ vars.XERO_ACCOUNT_ID }}
+          XERO_BASELINE: ${{ vars.XERO_BASELINE }}
+          XERO_TENANT_ID: ${{ vars.XERO_TENANT_ID }}
+          XERO_SCOPES: ${{ vars.XERO_SCOPES }}
+        run: |
+          if [ -z "$XERO_CLIENT_ID" ]; then
+            echo "Xero secrets not set up yet - skipping. See README."
+            exit 0
+          fi
+          node scripts/xero-sync.mjs
+
+      - name: Commit if the balance changed
+        run: |
+          if git diff --quiet data/progress.json; then
+            echo "No change."
+            exit 0
+          fi
+          git config user.name "savings-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/progress.json
+          git commit -m "Update savings from Xero"
+          git push

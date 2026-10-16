@@ -1,0 +1,13 @@
+{
+  "overline": "The 2027 Mission",
+  "title": "Schoolies × Rugby World Cup",
+  "subtitle": "Gold Coast · Australia · 2027",
+  "goal": 20000,
+  "symbol": "$",
+  "currency": "NZD",
+  "saveBy": "2027-09-30",
+  "events": [
+    { "label": "Rugby World Cup", "note": "kicks off", "date": "2027-10-01" },
+    { "label": "Schoolies", "note": "starts", "date": "2027-11-20" }
+  ]
+}
